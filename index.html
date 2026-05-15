@@ -343,32 +343,34 @@
   </section>
 
   <!-- ════════════════════════════════
-       CONTACT SECTION — NETLIFY FORM
-  ════════════════════════════════ -->
+        CONTACT SECTION — NETLIFY FORM
+    ════════════════════════════════ -->
   <section id="contact" class="contact-section" aria-labelledby="contactTitle">
     <h2 id="contactTitle" class="section-title">Contáctanos</h2>
+
     <div class="contact-wrapper">
-      <!-- 
-        NETLIFY FORMS: El atributo data-netlify="true" permite que Netlify
-        procese automáticamente este formulario sin backend adicional.
-        El atributo name="contact" identifica el formulario en el dashboard.
-      -->
+
+      <!-- NETLIFY FORM (CORREGIDO PARA VITE + BUILD) -->
       <form
         name="contact"
         method="POST"
+        action="/success"
         data-netlify="true"
-        netlify-honeypot="bot-field"
-        class="contact-form"
+        data-netlify-honeypot="bot-field"
         id="contactForm"
+        class="contact-form"
         novalidate
-        aria-label="Formulario de contacto"
       >
-        <!-- Campo oculto requerido por Netlify -->
+
+        <!-- REQUIRED NETLIFY HIDDEN INPUT -->
         <input type="hidden" name="form-name" value="contact" />
 
-        <!-- Honeypot anti-spam (oculto visualmente) -->
-        <div style="display:none" aria-hidden="true">
-          <label>No llenar si eres humano: <input name="bot-field" tabindex="-1" /></label>
+        <!-- Honeypot anti-spam -->
+        <div hidden>
+          <label>
+            No llenar si eres humano:
+            <input name="bot-field" />
+          </label>
         </div>
 
         <div class="form-group">
@@ -379,11 +381,9 @@
             name="name"
             placeholder="Tu nombre"
             required
-            aria-required="true"
-            aria-describedby="nameError"
             autocomplete="name"
           />
-          <span class="form-error" id="nameError" role="alert" aria-live="assertive"></span>
+          <span class="form-error" id="nameError"></span>
         </div>
 
         <div class="form-group">
@@ -394,16 +394,14 @@
             name="email"
             placeholder="correo@ejemplo.com"
             required
-            aria-required="true"
-            aria-describedby="emailError"
             autocomplete="email"
           />
-          <span class="form-error" id="emailError" role="alert" aria-live="assertive"></span>
+          <span class="form-error" id="emailError"></span>
         </div>
 
         <div class="form-group">
           <label for="contactType">Tipo de consulta</label>
-          <select id="contactType" name="type" aria-label="Selecciona el tipo de consulta">
+          <select id="contactType" name="type">
             <option value="">Selecciona una opción</option>
             <option value="demo">Solicitar demo</option>
             <option value="institutional">Plan institucional</option>
@@ -417,22 +415,22 @@
           <textarea
             id="contactMessage"
             name="message"
-            placeholder="¿Cómo podemos ayudarte?"
             rows="4"
+            placeholder="¿Cómo podemos ayudarte?"
             required
-            aria-required="true"
-            aria-describedby="messageError"
           ></textarea>
-          <span class="form-error" id="messageError" role="alert" aria-live="assertive"></span>
+          <span class="form-error" id="messageError"></span>
         </div>
 
-        <div id="formSuccess" class="form-success hidden" role="status" aria-live="polite">
+        <!-- SUCCESS MESSAGE -->
+        <div id="formSuccess" class="form-success hidden">
           ✓ Mensaje enviado correctamente. Te contactaremos pronto.
         </div>
 
         <button type="submit" class="btn-primary" id="submitBtn" style="width:100%">
           Enviar mensaje
         </button>
+
       </form>
     </div>
   </section>
