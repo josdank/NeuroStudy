@@ -3,7 +3,10 @@
 # ════════════════════════════════════════════
 
 [build]
+  # Comando para generar el build de producción con Vite
   command = "npm run build"
+
+  # Carpeta que Vite genera al hacer build
   publish = "dist"
 
 # ─── Headers de seguridad ───
@@ -14,9 +17,10 @@
     X-XSS-Protection       = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy        = "strict-origin-when-cross-origin"
+    # Permite acceso a cámara desde HTTPS (Netlify sirve HTTPS por defecto)
     Permissions-Policy     = "camera=(self)"
 
-# ─── Redireccionamiento SPA ───
+# ─── Redireccionamiento SPA (por si añades rutas) ───
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
@@ -39,6 +43,6 @@
     Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
-  for = "/*.html"
+  for = "/images/*"
   [headers.values]
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=86400"

@@ -26,7 +26,6 @@ const appState = {
   moodHistory:    [],
   logEntries:     [],
   currentMood:    null,
-  cameraStream:   null,
 };
 
 /* ─── Datos de estados emocionales ─── */
@@ -94,12 +93,15 @@ function initNavMenu() {
 
   if (!toggle || !menu) return;
 
+  // Abrir / cerrar menú
   toggle.addEventListener('click', () => {
     const isOpen = menu.classList.toggle('open');
     toggle.setAttribute('aria-expanded', String(isOpen));
+    // Bloquear scroll del body cuando el menú está abierto
     document.body.style.overflow = isOpen ? 'hidden' : '';
   });
 
+  // Cerrar al hacer clic en un enlace
   menu.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', () => {
       menu.classList.remove('open');
@@ -108,6 +110,7 @@ function initNavMenu() {
     });
   });
 
+  // Cerrar con tecla Escape
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && menu.classList.contains('open')) {
       menu.classList.remove('open');
@@ -122,43 +125,19 @@ function initNavMenu() {
    CÁMARA
 ════════════════════════════════ */
 async function startCamera() {
-  // Detener stream previo si existe
-  if (appState.cameraStream) {
-    appState.cameraStream.getTracks().forEach(track => track.stop());
-    appState.cameraStream = null;
-  }
-
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
     const video  = document.getElementById('videoFeed');
     video.srcObject = stream;
-    appState.cameraStream = stream;
     activateScanMode();
-    addLog('📷 Cámara activada. Analizando estado emocional...');
+    addLog('Cámara activada. Analizando estado emocional...');
   } catch (err) {
-    console.warn('Error de cámara:', err);
     // Modo simulación: sin cámara real
     const video = document.getElementById('videoFeed');
     video.style.background = 'linear-gradient(135deg, #0A1A28 0%, #0D2A3A 100%)';
-    video.srcObject = null;
     activateScanMode();
-    addLog('⚠️ Modo simulación activo (cámara no disponible o permisos denegados).');
+    addLog('Modo simulación activo (cámara no disponible).');
   }
-}
-
-function stopCamera() {
-  if (appState.cameraStream) {
-    appState.cameraStream.getTracks().forEach(track => track.stop());
-    appState.cameraStream = null;
-  }
-  if (appState.moodInterval) {
-    clearInterval(appState.moodInterval);
-    appState.moodInterval = null;
-  }
-  appState.scanActive = false;
-  document.getElementById('scanLine').classList.remove('active');
-  document.getElementById('camOverlay').classList.remove('hidden');
-  addLog('📷 Cámara desactivada.');
 }
 
 /** Activa la UI de escaneo y arranca el ciclo de detección */
@@ -173,20 +152,17 @@ function activateScanMode() {
    CICLO DE DETECCIÓN EMOCIONAL
 ════════════════════════════════ */
 function startMoodCycle() {
-  if (appState.moodInterval) clearInterval(appState.moodInterval);
-  detectMood(); // detección inicial inmediata
+  detectMood();
   appState.moodInterval = setInterval(detectMood, 5000);
 }
 
 function detectMood() {
-  if (!appState.scanActive && !appState.sessionActive) return;
-  
   const mood = MOODS[Math.floor(Math.random() * MOODS.length)];
   appState.currentMood = mood;
   renderMood(mood);
   appState.moodHistory.push({ t: appState.sessionSeconds, mood: mood.key });
   drawSparkline();
-  if (appState.sessionActive && !appState.sessionPaused) applyAdaptation(mood);
+  if (appState.sessionActive) applyAdaptation(mood);
 }
 
 function renderMood(mood) {
@@ -199,6 +175,7 @@ function renderMood(mood) {
   bar.style.width      = mood.bar + '%';
   bar.style.background = mood.color;
 
+  // Actualizar aria-valuenow en la barra de progreso
   const track = bar.parentElement;
   if (track) track.setAttribute('aria-valuenow', String(mood.bar));
 }
@@ -230,7 +207,7 @@ function applyAdaptation(mood) {
   document.getElementById('metricEff').textContent   = effMap[mood.key];
   document.getElementById('focusDelta').style.display = 'inline-flex';
 
-  addLog(`🔄 Adaptación #${appState.adaptCount}: modo "${mood.mode}" activado (estado: ${mood.label.toLowerCase()})`);
+  addLog(`Adaptación #${appState.adaptCount}: modo "${mood.mode}" activado (estado: ${mood.label.toLowerCase()})`);
 }
 
 /* ════════════════════════════════
@@ -239,20 +216,16 @@ function applyAdaptation(mood) {
 function startSession() {
   if (!appState.scanActive) {
     startCamera();
-    setTimeout(() => _startSession(), 1500);
+    setTimeout(_startSession, 1200);
   } else {
     _startSession();
   }
 }
 
 function _startSession() {
-  if (appState.sessionActive) return;
-  
   appState.sessionActive  = true;
   appState.sessionPaused  = false;
   appState.sessionSeconds = 0;
-  appState.adaptCount     = 0;
-  document.getElementById('metricAdapt').textContent = '0';
 
   document.getElementById('statusText').textContent      = 'Sesión activa';
   document.getElementById('sessionTitle').textContent    = 'Sesión de estudio en progreso';
@@ -260,19 +233,15 @@ function _startSession() {
   document.getElementById('btnStart').classList.add('hidden');
   document.getElementById('btnPause').classList.remove('hidden');
   document.getElementById('btnStop').classList.remove('hidden');
-  
-  const pauseBtn = document.getElementById('btnPause');
-  pauseBtn.textContent = 'Pausar';
-  pauseBtn.setAttribute('aria-label', 'Pausar sesión');
 
-  addLog('🎯 Sesión iniciada. Detectando estado inicial...');
+  appState.logEntries = [];
+  addLog('Sesión iniciada. Detectando estado inicial...');
 
-  if (appState.sessionTimer) clearInterval(appState.sessionTimer);
   appState.sessionTimer = setInterval(tickSession, 1000);
 }
 
 function tickSession() {
-  if (appState.sessionPaused || !appState.sessionActive) return;
+  if (appState.sessionPaused) return;
 
   appState.sessionSeconds++;
   const m = String(Math.floor(appState.sessionSeconds / 60)).padStart(2, '0');
@@ -282,6 +251,7 @@ function tickSession() {
   document.getElementById('timerDisplay').textContent = timeStr;
   document.getElementById('metricTime').textContent   = timeStr;
 
+  // Progreso hacia 25 minutos (1500 segundos)
   const progress = Math.min((appState.sessionSeconds / 1500) * 100, 100);
   const progressEl = document.getElementById('progressFill');
   progressEl.style.width = progress + '%';
@@ -289,27 +259,20 @@ function tickSession() {
 }
 
 function pauseSession() {
-  if (!appState.sessionActive) return;
-  
   appState.sessionPaused = !appState.sessionPaused;
   const btn = document.getElementById('btnPause');
   btn.textContent = appState.sessionPaused ? 'Reanudar' : 'Pausar';
   btn.setAttribute('aria-label', appState.sessionPaused ? 'Reanudar sesión' : 'Pausar sesión');
   document.getElementById('statusText').textContent = appState.sessionPaused ? 'Sesión pausada' : 'Sesión activa';
-  addLog(appState.sessionPaused ? '⏸️ Sesión pausada.' : '▶️ Sesión reanudada.');
+  addLog(appState.sessionPaused ? 'Sesión pausada.' : 'Sesión reanudada.');
 }
 
 function stopSession() {
-  if (appState.sessionTimer) {
-    clearInterval(appState.sessionTimer);
-    appState.sessionTimer = null;
-  }
-  
+  clearInterval(appState.sessionTimer);
   appState.sessionActive = false;
-  appState.sessionPaused = false;
 
   const total = document.getElementById('timerDisplay').textContent;
-  addLog(`🏁 Sesión finalizada. Duración total: ${total}. Adaptaciones realizadas: ${appState.adaptCount}.`);
+  addLog(`Sesión finalizada. Duración total: ${total}. Adaptaciones realizadas: ${appState.adaptCount}.`);
 
   document.getElementById('statusText').textContent   = 'Sesión completada';
   document.getElementById('btnStart').classList.remove('hidden');
@@ -317,12 +280,6 @@ function stopSession() {
   document.getElementById('btnStop').classList.add('hidden');
   document.getElementById('sessionTitle').textContent = 'Sesión completada';
   document.getElementById('sessionMeta').textContent  = `Duración: ${total} · ${appState.adaptCount} adaptaciones realizadas`;
-  document.getElementById('currentMode').style.display = 'none';
-  
-  // Resetear progreso
-  document.getElementById('progressFill').style.width = '0%';
-  document.getElementById('timerDisplay').textContent = '00:00';
-  document.getElementById('metricTime').textContent = '00:00';
 }
 
 /* ════════════════════════════════
@@ -331,7 +288,9 @@ function stopSession() {
 function initExerciseCards() {
   const cards = document.querySelectorAll('.exercise-card');
   cards.forEach(card => {
+    // Clic con ratón
     card.addEventListener('click', () => selectExercise(card));
+    // Activación con teclado (Enter / Space)
     card.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -349,7 +308,7 @@ function selectExercise(el) {
   el.classList.add('active');
   el.setAttribute('aria-selected', 'true');
   const name = el.dataset.exercise || el.querySelector('.ex-name')?.textContent || '';
-  addLog(`📚 Ejercicio seleccionado: "${name}"`);
+  addLog(`Ejercicio seleccionado: "${name}"`);
 }
 
 /* ════════════════════════════════
@@ -357,10 +316,10 @@ function selectExercise(el) {
 ════════════════════════════════ */
 function addLog(text) {
   const now = new Date();
-  const t   = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+  const t   = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
 
   appState.logEntries.unshift({ t, text });
-  if (appState.logEntries.length > 12) appState.logEntries.pop();
+  if (appState.logEntries.length > 8) appState.logEntries.pop();
 
   const list = document.getElementById('logList');
   if (!list) return;
@@ -375,6 +334,7 @@ function addLog(text) {
     .join('');
 }
 
+/** Sanitización básica para evitar XSS en el log */
 function escapeHTML(str) {
   return str
     .replace(/&/g, '&amp;')
@@ -391,14 +351,10 @@ function drawSparkline() {
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
-  const container = canvas.parentElement;
-  const W = container ? container.clientWidth - 32 : 240;
-  const H = 80;
-  canvas.width = W;
+  const W   = canvas.offsetWidth || 240;
+  const H   = 80;
+  canvas.width  = W;
   canvas.height = H;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
-  
   ctx.clearRect(0, 0, W, H);
 
   const pts = appState.moodHistory.slice(-20);
@@ -408,16 +364,13 @@ function drawSparkline() {
   const valMap   = { focus: 0.88, stress: 0.5, relax: 0.72, distract: 0.35 };
   const vals     = pts.map(p => valMap[p.mood] || 0.5);
 
-  // Fondo sutil
-  ctx.fillStyle = 'rgba(255,255,255,0.02)';
-  ctx.fillRect(0, 0, W, H);
-
+  // Línea principal con gradiente de color
   ctx.beginPath();
-  ctx.moveTo(0, H - vals[0] * H * 0.75 - 10);
+  ctx.moveTo(0, H - vals[0] * H * 0.85 - 5);
 
   for (let i = 1; i < vals.length; i++) {
     const x = (i / (vals.length - 1)) * W;
-    const y = H - vals[i] * H * 0.75 - 10;
+    const y = H - vals[i] * H * 0.85 - 5;
     ctx.lineTo(x, y);
   }
 
@@ -427,30 +380,15 @@ function drawSparkline() {
   });
 
   ctx.strokeStyle = grad;
-  ctx.lineWidth   = 2.5;
+  ctx.lineWidth   = 2;
   ctx.stroke();
 
-  // Área bajo la línea (sutil)
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(13,184,150,0.05)';
-  ctx.fill();
-
-  // Puntos
+  // Puntos individuales
   vals.forEach((v, i) => {
     const x = (i / (vals.length - 1)) * W;
-    const y = H - v * H * 0.75 - 10;
+    const y = H - v * H * 0.85 - 5;
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = colorMap[pts[i].mood] || '#8A97A8';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x, y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
     ctx.fillStyle = colorMap[pts[i].mood] || '#8A97A8';
     ctx.fill();
   });
@@ -463,8 +401,10 @@ function openModal() {
   const bg = document.getElementById('modalBg');
   if (!bg) return;
   bg.classList.add('open');
+  // Foco al primer elemento interactivo del modal
   const closeBtn = document.getElementById('modalClose');
   if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
+  // Bloquear scroll de fondo
   document.body.style.overflow = 'hidden';
 }
 
@@ -473,6 +413,7 @@ function closeModal() {
   if (!bg) return;
   bg.classList.remove('open');
   document.body.style.overflow = '';
+  // Devolver foco al botón que abrió el modal
   document.getElementById('btnAbout')?.focus();
 }
 
@@ -484,10 +425,12 @@ function initModal() {
   openBtn?.addEventListener('click', openModal);
   closeBtn?.addEventListener('click', closeModal);
 
+  // Clic fuera del modal = cerrar
   bg?.addEventListener('click', e => {
     if (e.target === bg) closeModal();
   });
 
+  // Tecla Escape
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && bg?.classList.contains('open')) closeModal();
   });
@@ -495,7 +438,9 @@ function initModal() {
 
 /* ════════════════════════════════
    VALIDACIÓN DEL FORMULARIO DE CONTACTO
-   Compatible con Netlify Forms
+   Compatible con Netlify Forms:
+   - Si Netlify procesa el form, el submit nativo funciona
+   - Si se usa JS, se previene el default y se valida primero
 ════════════════════════════════ */
 function initContactForm() {
   const form = document.getElementById('contactForm');
@@ -504,55 +449,58 @@ function initContactForm() {
   form.addEventListener('submit', async e => {
     e.preventDefault();
 
+    // Limpiar errores previos
     clearFormErrors();
 
+    // Validar campos
     const valid = validateForm(form);
     if (!valid) return;
 
+    // Mostrar estado de carga
     const submitBtn = document.getElementById('submitBtn');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Enviando…';
-    submitBtn.disabled = true;
+    submitBtn.disabled    = true;
 
     try {
+      // Envío real a Netlify (fetch con FormData)
       const formData = new FormData(form);
       const response = await fetch('/', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(formData).toString(),
+        body:    new URLSearchParams(formData).toString(),
       });
 
       if (response.ok) {
+        // Éxito
         form.reset();
-        const successDiv = document.getElementById('formSuccess');
-        successDiv.classList.remove('hidden');
+        document.getElementById('formSuccess').classList.remove('hidden');
         setTimeout(() => {
-          successDiv.classList.add('hidden');
+          document.getElementById('formSuccess').classList.add('hidden');
         }, 6000);
-        addLog('📧 Formulario de contacto enviado correctamente.');
       } else {
         throw new Error(`HTTP ${response.status}`);
       }
     } catch (err) {
-      console.warn('Error en envío (probablemente entorno local):', err);
-      // Fallback visual para demostración
+      // Fallback: en local (Live Server) Netlify no procesa, simulamos éxito
+      console.info('Nota: Formulario de Netlify solo funciona en producción.', err);
       form.reset();
-      const successDiv = document.getElementById('formSuccess');
-      successDiv.classList.remove('hidden');
+      document.getElementById('formSuccess').classList.remove('hidden');
       setTimeout(() => {
-        successDiv.classList.add('hidden');
+        document.getElementById('formSuccess').classList.add('hidden');
       }, 6000);
-      addLog('📧 Demostración: formulario enviado (Netlify activo en producción).');
     } finally {
       submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
+      submitBtn.disabled    = false;
     }
   });
 }
 
+/** Valida todos los campos requeridos y muestra mensajes de error */
 function validateForm(form) {
   let isValid = true;
 
+  // Nombre
   const name = form.querySelector('#contactName');
   if (!name.value.trim()) {
     showFieldError(name, 'nameError', 'Por favor ingresa tu nombre completo.');
@@ -562,6 +510,7 @@ function validateForm(form) {
     isValid = false;
   }
 
+  // Email
   const email = form.querySelector('#contactEmail');
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email.value.trim()) {
@@ -572,6 +521,7 @@ function validateForm(form) {
     isValid = false;
   }
 
+  // Mensaje
   const message = form.querySelector('#contactMessage');
   if (!message.value.trim()) {
     showFieldError(message, 'messageError', 'Por favor escribe tu mensaje.');
@@ -588,7 +538,7 @@ function showFieldError(field, errorId, message) {
   field.classList.add('error');
   const errorEl = document.getElementById(errorId);
   if (errorEl) errorEl.textContent = message;
-  if (document.activeElement !== field) field.focus();
+  field.focus();
 }
 
 function clearFormErrors() {
@@ -602,27 +552,30 @@ function clearFormErrors() {
 
 /* ════════════════════════════════
    ANIMACIONES DE SCROLL
+   (Intersection Observer API)
 ════════════════════════════════ */
 function initScrollAnimations() {
+  // Solo si el usuario no prefiere reducción de movimiento
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
+        entry.target.style.opacity   = '1';
         entry.target.style.transform = 'translateY(0)';
         observer.unobserve(entry.target);
       }
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
+  // Aplicar animación de entrada a estos elementos
   const targets = document.querySelectorAll(
     '.feature-item, .pricing-card, .contact-form, .metric-cell'
   );
 
   targets.forEach((el, i) => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
+    el.style.opacity    = '0';
+    el.style.transform  = 'translateY(20px)';
     el.style.transition = `opacity 0.5s ease ${i * 0.06}s, transform 0.5s ease ${i * 0.06}s`;
     observer.observe(el);
   });
@@ -649,12 +602,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initContactForm();
   initScrollAnimations();
 
-  addLog('🧠 NeuroStudy listo. Pulsa "Iniciar sesión" para comenzar.');
-  
-  // Limpiar streams al recargar página (opcional)
-  window.addEventListener('beforeunload', () => {
-    if (appState.cameraStream) {
-      appState.cameraStream.getTracks().forEach(track => track.stop());
-    }
-  });
+  // Log inicial
+  addLog('NeuroStudy listo. Pulsa "Iniciar sesión" para comenzar.');
 });
