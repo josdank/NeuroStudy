@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ─── META SEO ─── -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroStudy — Plataforma Adaptativa de Estudio</title>
+  <meta name="description" content="NeuroStudy analiza tu estado emocional en tiempo real y adapta tu sesión de estudio para maximizar la retención. Estudia menos. Aprende más." />
+  <meta name="keywords" content="estudio adaptativo, neuroestudio, aprendizaje inteligente, detección emocional, productividad académica" />
+  <meta name="author" content="NeuroStudy" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- ─── OPEN GRAPH ─── -->
+  <meta property="og:title" content="NeuroStudy — Plataforma Adaptativa de Estudio" />
+  <meta property="og:description" content="Estudia menos. Aprende más. Tu cerebro manda." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="images/og-preview.png" />
+
+  <!-- ─── FAVICON ─── -->
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+
+  <!-- ─── FONTS ─── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+
+  <!-- ─── STYLES ─── -->
+  <link rel="stylesheet" href="styles/style.css" />
+</head>
+<body>
+
+  <!-- ════════════════════════════════
+       NAV
+  ════════════════════════════════ -->
+  <nav role="navigation" aria-label="Navegación principal">
+    <div class="nav-brand">
+      <div class="logo" aria-label="NeuroStudy">Neuro<span>Study</span></div>
+      <div class="tagline">Plataforma Adaptativa de Estudio</div>
+    </div>
+
+    <!-- Menú hamburguesa (mobile) -->
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="navMenu">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+
+    <div class="nav-menu" id="navMenu" role="menu">
+      <a href="#app" role="menuitem">App</a>
+      <a href="#features" role="menuitem">Características</a>
+      <a href="#pricing" role="menuitem">Precios</a>
+      <a href="#contact" role="menuitem">Contacto</a>
+    </div>
+
+    <div class="status-pill" id="statusPill" aria-live="polite">
+      <div class="dot" aria-hidden="true"></div>
+      <span id="statusText">Sin sesión activa</span>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════
+       APP PRINCIPAL
+  ════════════════════════════════ -->
+  <main id="app">
+    <div class="app" role="application" aria-label="Aplicación NeuroStudy">
+
+      <!-- ── PANEL IZQUIERDO: Cámara + Estado ── -->
+      <aside class="left-panel" aria-label="Panel de detección emocional">
+
+        <!-- Cámara -->
+        <section aria-labelledby="camLabel">
+          <div class="panel-label" id="camLabel">Detección de Estado</div>
+          <div class="camera-box" role="img" aria-label="Vista de cámara para detección emocional">
+            <video id="videoFeed" autoplay playsinline muted aria-label="Feed de cámara"></video>
+            <div class="camera-overlay" id="camOverlay">
+              <div class="cam-icon" aria-hidden="true">📷</div>
+              <p>Activa la cámara para detectar tu estado emocional en tiempo real</p>
+              <button class="btn-primary" id="btnCamera" aria-label="Activar cámara para detección emocional">
+                Activar cámara
+              </button>
+            </div>
+            <div class="scan-frame" aria-hidden="true">
+              <div class="corner-br"></div>
+              <div class="corner-bl"></div>
+            </div>
+            <div class="scan-line" id="scanLine" aria-hidden="true"></div>
+          </div>
+        </section>
+
+        <!-- Estado emocional -->
+        <section class="mood-card" aria-labelledby="moodTitle">
+          <div class="panel-label" id="moodTitle" style="margin-bottom:0.8rem">Estado emocional</div>
+          <div class="mood-header">
+            <div class="mood-badge">
+              <div class="mood-icon" id="moodIcon" aria-hidden="true" style="background:rgba(13,184,150,0.12)">🧠</div>
+              <div>
+                <div id="moodLabel" style="font-size:0.95rem; font-weight:600;">En espera</div>
+                <div class="mood-conf" id="moodConf">Activa la cámara</div>
+              </div>
+            </div>
+          </div>
+          <div class="mood-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Nivel de estado emocional">
+            <div class="mood-bar-fill" id="moodBar" style="width:0%; background:var(--teal-light)"></div>
+          </div>
+          <div class="mood-states" aria-label="Leyenda de estados">
+            <div class="state-item"><div class="state-dot" style="background:var(--teal-light)" aria-hidden="true"></div>Concentrado</div>
+            <div class="state-item"><div class="state-dot" style="background:var(--amber)" aria-hidden="true"></div>Estresado</div>
+            <div class="state-item"><div class="state-dot" style="background:var(--sky)" aria-hidden="true"></div>Relajado</div>
+            <div class="state-item"><div class="state-dot" style="background:var(--rose)" aria-hidden="true"></div>Distraído</div>
+          </div>
+        </section>
+
+        <!-- Info del producto -->
+        <section class="product-info" aria-labelledby="infoLabel">
+          <div class="panel-label" id="infoLabel">Información del Producto</div>
+          <div class="tip-card">
+            <div class="tip-label">Precio</div>
+            Plan Básico: Gratuito · 2 materias<br />
+            Plan Premium: $4.99 / mes<br />
+            Plan Institucional: $2 / alumno / mes
+          </div>
+          <div class="tip-card" style="margin-top:0.6rem">
+            <div class="tip-label">Eslogan</div>
+            <em class="slogan">"Estudia menos. Aprende más. Tu cerebro manda."</em>
+          </div>
+        </section>
+
+      </aside>
+
+      <!-- ── PANEL DERECHO: Métricas + Contenido ── -->
+      <div class="right-panel">
+
+        <!-- Métricas -->
+        <section class="metrics-row" aria-label="Métricas de la sesión">
+          <div class="metric-cell">
+            <div class="metric-label">Tiempo de sesión</div>
+            <div class="metric-value teal" id="metricTime" aria-live="polite">00:00</div>
+            <div class="metric-sub">minutos activos</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-label">Nivel de enfoque</div>
+            <div class="metric-value" id="metricFocus">--</div>
+            <div class="metric-sub">índice neuronal</div>
+            <div class="metric-delta delta-up" id="focusDelta" style="display:none" aria-live="polite">+12% vs promedio</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-label">Adaptaciones</div>
+            <div class="metric-value" id="metricAdapt" aria-live="polite">0</div>
+            <div class="metric-sub">ajustes automáticos</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-label">Eficiencia estimada</div>
+            <div class="metric-value amber" id="metricEff" aria-live="polite">--</div>
+            <div class="metric-sub">vs. estudio estándar</div>
+          </div>
+        </section>
+
+        <!-- Contenido + Sidebar -->
+        <div class="content-area">
+          <div class="main-content">
+
+            <!-- Sesión -->
+            <section aria-labelledby="sessionTitle">
+              <div class="session-header">
+                <div>
+                  <h1 class="session-title" id="sessionTitle">Iniciar una sesión de estudio</h1>
+                  <div class="session-meta" id="sessionMeta">Activa la cámara y selecciona una materia para comenzar</div>
+                </div>
+                <div class="timer-display" id="timerDisplay" aria-label="Tiempo transcurrido" aria-live="polite">00:00</div>
+              </div>
+              <div style="margin-top:0.8rem">
+                <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progreso de la sesión">
+                  <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Recomendación adaptativa -->
+            <section class="adapt-card mode-focus" id="adaptCard" aria-labelledby="adaptTitle" aria-live="polite">
+              <div class="adapt-card-header">
+                <div class="adapt-icon" aria-hidden="true" style="background:rgba(13,184,150,0.12)">🎯</div>
+                <div class="adapt-card-title" id="adaptTitle">Modo de estudio recomendado</div>
+              </div>
+              <p class="adapt-desc" id="adaptDesc">
+                Una vez iniciada la sesión, NeuroStudy analizará tu estado emocional y ajustará automáticamente el ritmo, el tipo de ejercicios, los descansos y la música sugerida para maximizar tu rendimiento cognitivo.
+              </p>
+            </section>
+
+            <!-- Ejercicios -->
+            <section aria-labelledby="exLabel">
+              <div class="panel-label" id="exLabel" style="margin-bottom:0.8rem">Actividades adaptadas</div>
+              <div class="exercise-grid" id="exerciseGrid" role="list">
+                <article class="exercise-card" role="listitem" tabindex="0" aria-label="Lectura activa con anotaciones" data-exercise="Lectura activa">
+                  <div class="ex-type">Comprensión</div>
+                  <div class="ex-name">Lectura activa con anotaciones</div>
+                  <div class="ex-bar-track" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">
+                    <div class="ex-bar-fill" style="width:70%"></div>
+                  </div>
+                </article>
+                <article class="exercise-card" role="listitem" tabindex="0" aria-label="Mapas conceptuales guiados" data-exercise="Mapas conceptuales">
+                  <div class="ex-type">Organización</div>
+                  <div class="ex-name">Mapas conceptuales guiados</div>
+                  <div class="ex-bar-track" role="progressbar" aria-valuenow="55" aria-valuemin="0" aria-valuemax="100">
+                    <div class="ex-bar-fill" style="width:55%"></div>
+                  </div>
+                </article>
+                <article class="exercise-card" role="listitem" tabindex="0" aria-label="Práctica espaciada con flashcards" data-exercise="Práctica espaciada">
+                  <div class="ex-type">Retención</div>
+                  <div class="ex-name">Práctica espaciada con flashcards</div>
+                  <div class="ex-bar-track" role="progressbar" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100">
+                    <div class="ex-bar-fill" style="width:82%"></div>
+                  </div>
+                </article>
+                <article class="exercise-card" role="listitem" tabindex="0" aria-label="Resolución rápida de problemas" data-exercise="Resolución rápida">
+                  <div class="ex-type">Velocidad cognitiva</div>
+                  <div class="ex-name">Resolución rápida de problemas</div>
+                  <div class="ex-bar-track" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                    <div class="ex-bar-fill" style="width:40%"></div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+          </div>
+
+          <!-- ── Sidebar derecho ── -->
+          <aside class="right-sidebar" aria-label="Panel lateral de información">
+            <section aria-labelledby="chartLabel">
+              <div class="sidebar-section-title" id="chartLabel">Historial de estado emocional</div>
+              <div class="sparkline-container">
+                <canvas id="moodChart" aria-label="Gráfico de historial emocional" role="img"></canvas>
+              </div>
+            </section>
+
+            <section aria-labelledby="tipLabel">
+              <div class="sidebar-section-title" id="tipLabel">Consejo adaptativo</div>
+              <div class="tip-card" id="tipCard" aria-live="polite">
+                <div class="tip-label">Recomendación</div>
+                Activa la detección de cámara para recibir consejos personalizados basados en tu estado emocional actual.
+              </div>
+            </section>
+
+            <section aria-labelledby="logLabel">
+              <div class="sidebar-section-title" id="logLabel">Registro de sesión</div>
+              <div class="log-list" id="logList" aria-live="polite" aria-relevant="additions">
+                <div class="log-item">
+                  <div class="log-time">--:--</div>
+                  <div class="log-text">Esperando inicio de sesión...</div>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+
+        <!-- Controles de sesión -->
+        <div class="controls-bar" role="toolbar" aria-label="Controles de sesión">
+          <button class="btn-primary" id="btnStart" aria-label="Iniciar sesión de estudio">Iniciar sesión</button>
+          <button class="btn-ghost hidden" id="btnPause" aria-label="Pausar sesión">Pausar</button>
+          <button class="btn-ghost btn-danger hidden" id="btnStop" aria-label="Finalizar sesión">Finalizar</button>
+          <div class="spacer"></div>
+          <div id="currentMode" style="display:none" aria-live="polite">
+            <span class="mode-badge" style="background:rgba(13,184,150,0.12); color:var(--teal-light)">
+              Modo activo: <span id="modeName">Enfoque</span>
+            </span>
+          </div>
+          <button class="btn-ghost" id="btnAbout" aria-label="Acerca del producto">Acerca del producto</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ════════════════════════════════
+       FEATURES SECTION
+  ════════════════════════════════ -->
+  <section id="features" class="features-section" aria-labelledby="featuresTitle">
+    <h2 id="featuresTitle" class="section-title">¿Cómo funciona NeuroStudy?</h2>
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon" aria-hidden="true">👁️</div>
+        <h3>Detección en tiempo real</h3>
+        <p>La cámara analiza microexpresiones faciales para identificar tu estado emocional cada 5 segundos.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" aria-hidden="true">🧬</div>
+        <h3>Adaptación cognitiva</h3>
+        <p>El sistema ajusta tipo de ejercicios, ritmo y dificultad según tu nivel de concentración detectado.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" aria-hidden="true">📈</div>
+        <h3>Métricas de rendimiento</h3>
+        <p>Visualiza en tiempo real tu índice de enfoque, adaptaciones y eficiencia comparada con el estudio estándar.</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" aria-hidden="true">🔒</div>
+        <h3>Privacidad garantizada</h3>
+        <p>Todo el procesamiento ocurre localmente en tu dispositivo. Ningún dato de video se envía a servidores externos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       PRICING SECTION
+  ════════════════════════════════ -->
+  <section id="pricing" class="pricing-section" aria-labelledby="pricingTitle">
+    <h2 id="pricingTitle" class="section-title">Planes</h2>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-badge">Gratis</div>
+        <div class="pricing-price">$0<span>/mes</span></div>
+        <ul class="pricing-features" aria-label="Características del plan gratuito">
+          <li>✓ 2 materias</li>
+          <li>✓ Detección emocional básica</li>
+          <li>✓ Sesiones de hasta 25 min</li>
+          <li>✗ Sin historial avanzado</li>
+        </ul>
+        <button class="btn-primary" style="width:100%">Comenzar gratis</button>
+      </div>
+      <div class="pricing-card pricing-featured" aria-label="Plan recomendado">
+        <div class="pricing-badge">Premium</div>
+        <div class="pricing-price">$4.99<span>/mes</span></div>
+        <ul class="pricing-features" aria-label="Características del plan premium">
+          <li>✓ Materias ilimitadas</li>
+          <li>✓ Detección emocional avanzada</li>
+          <li>✓ Sesiones ilimitadas</li>
+          <li>✓ Historial y análisis completo</li>
+        </ul>
+        <button class="btn-primary" style="width:100%">Obtener Premium</button>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-badge">Institucional</div>
+        <div class="pricing-price">$2<span>/alumno/mes</span></div>
+        <ul class="pricing-features" aria-label="Características del plan institucional">
+          <li>✓ Todo lo de Premium</li>
+          <li>✓ Panel de administración</li>
+          <li>✓ Reportes por grupo</li>
+          <li>✓ Soporte prioritario</li>
+        </ul>
+        <button class="btn-ghost" style="width:100%">Contactar ventas</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       CONTACT SECTION — NETLIFY FORM
+  ════════════════════════════════ -->
+  <section id="contact" class="contact-section" aria-labelledby="contactTitle">
+    <h2 id="contactTitle" class="section-title">Contáctanos</h2>
+    <div class="contact-wrapper">
+      <!-- 
+        NETLIFY FORMS: El atributo data-netlify="true" permite que Netlify
+        procese automáticamente este formulario sin backend adicional.
+        El atributo name="contact" identifica el formulario en el dashboard.
+      -->
+      <form
+        name="contact"
+        method="POST"
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+        class="contact-form"
+        id="contactForm"
+        novalidate
+        aria-label="Formulario de contacto"
+      >
+        <!-- Campo oculto requerido por Netlify -->
+        <input type="hidden" name="form-name" value="contact" />
+
+        <!-- Honeypot anti-spam (oculto visualmente) -->
+        <div style="display:none" aria-hidden="true">
+          <label>No llenar si eres humano: <input name="bot-field" tabindex="-1" /></label>
+        </div>
+
+        <div class="form-group">
+          <label for="contactName">Nombre completo <span aria-hidden="true">*</span></label>
+          <input
+            type="text"
+            id="contactName"
+            name="name"
+            placeholder="Tu nombre"
+            required
+            aria-required="true"
+            aria-describedby="nameError"
+            autocomplete="name"
+          />
+          <span class="form-error" id="nameError" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="contactEmail">Correo electrónico <span aria-hidden="true">*</span></label>
+          <input
+            type="email"
+            id="contactEmail"
+            name="email"
+            placeholder="correo@ejemplo.com"
+            required
+            aria-required="true"
+            aria-describedby="emailError"
+            autocomplete="email"
+          />
+          <span class="form-error" id="emailError" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="contactType">Tipo de consulta</label>
+          <select id="contactType" name="type" aria-label="Selecciona el tipo de consulta">
+            <option value="">Selecciona una opción</option>
+            <option value="demo">Solicitar demo</option>
+            <option value="institutional">Plan institucional</option>
+            <option value="support">Soporte técnico</option>
+            <option value="other">Otro</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="contactMessage">Mensaje <span aria-hidden="true">*</span></label>
+          <textarea
+            id="contactMessage"
+            name="message"
+            placeholder="¿Cómo podemos ayudarte?"
+            rows="4"
+            required
+            aria-required="true"
+            aria-describedby="messageError"
+          ></textarea>
+          <span class="form-error" id="messageError" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <div id="formSuccess" class="form-success hidden" role="status" aria-live="polite">
+          ✓ Mensaje enviado correctamente. Te contactaremos pronto.
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn" style="width:100%">
+          Enviar mensaje
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       FOOTER STRIP
+  ════════════════════════════════ -->
+  <footer class="product-strip" role="contentinfo">
+    <div>NeuroStudy — <strong>Producto Innovador</strong> · Detección emocional en tiempo real</div>
+    <div>Utilidad: maximizar rendimiento cognitivo &nbsp;|&nbsp; Beneficio: menos tiempo, mayor retención</div>
+  </footer>
+
+  <!-- ════════════════════════════════
+       MODAL
+  ════════════════════════════════ -->
+  <div
+    class="modal-bg"
+    id="modalBg"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalTitle"
+    aria-describedby="modalDesc"
+  >
+    <div class="modal">
+      <h2 id="modalTitle">NeuroStudy</h2>
+      <p id="modalDesc">Una plataforma de estudio adaptativo que analiza tu estado emocional en tiempo real mediante la cámara del dispositivo, y ajusta automáticamente el ritmo de la sesión, el tipo de actividades, los descansos y las recomendaciones para maximizar la retención y reducir la ansiedad académica.</p>
+      <p><strong style="color:#E8EDF2">Diferenciador:</strong> Ningún método existente (Pomodoro, apps de estudio genéricas) considera cómo te sientes en el momento. NeuroStudy adapta el estudio a tu cerebro, no al contrario.</p>
+      <p class="slogan" style="margin-bottom:1.2rem">"Estudia menos. Aprende más. Tu cerebro manda."</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="modalClose" aria-label="Cerrar modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SCRIPTS ─── -->
+  <script src="scripts/main.js" defer></script>
+</body>
+</html>
