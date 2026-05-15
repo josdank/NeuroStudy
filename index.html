@@ -14,7 +14,7 @@
   <meta property="og:title" content="NeuroStudy — Plataforma Adaptativa de Estudio" />
   <meta property="og:description" content="Estudia menos. Aprende más. Tu cerebro manda." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="images/og-preview.png" />
+  <meta property="og:image" content="https://neurostudy.com/og-preview.png" />
 
   <!-- ─── FAVICON ─── -->
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
@@ -349,14 +349,14 @@
     <h2 id="contactTitle" class="section-title">Contáctanos</h2>
     <div class="contact-wrapper">
       <!-- 
-        NETLIFY FORMS: El atributo data-netlify="true" permite que Netlify
+        NETLIFY FORMS: El atributo netlify es crítico para que Netlify
         procese automáticamente este formulario sin backend adicional.
         El atributo name="contact" identifica el formulario en el dashboard.
       -->
       <form
         name="contact"
         method="POST"
-        data-netlify="true"
+        netlify
         netlify-honeypot="bot-field"
         class="contact-form"
         id="contactForm"
